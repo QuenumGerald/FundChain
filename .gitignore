@@ -7,3 +7,8 @@ release/
 *.dot
 *.log
 *.ign
+
+# Ignore built binaries
+fundchaind
+build/
+dist/
