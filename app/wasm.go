@@ -37,8 +37,11 @@ func (app *App) registerWasmModules(
 		return nil, fmt.Errorf("error while reading wasm config: %s", err)
 	}
 
+    // Note: wasmd v0.60+ uses collections for params, not legacy x/params subspaces.
+
 	// The last arguments can contain custom message handlers, and custom query handlers,
 	// if we want to allow any custom callbacks
+	govModuleAddr, _ := app.AuthKeeper.AddressCodec().BytesToString(authtypes.NewModuleAddress(govtypes.ModuleName))
 	app.WasmKeeper = wasmkeeper.NewKeeper(
 		app.AppCodec(),
 		runtime.NewKVStoreService(app.GetKey(wasmtypes.StoreKey)),
@@ -55,9 +58,11 @@ func (app *App) registerWasmModules(
 		wasmConfig,
 		wasmtypes.VMConfig{},
 		wasmkeeper.BuiltInCapabilities(),
-		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		govModuleAddr,
 		wasmOpts...,
 	)
+
+
 
 	// register IBC modules
 	if err := app.RegisterModules(
