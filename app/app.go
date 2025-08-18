@@ -9,12 +9,9 @@ import (
 	"cosmossdk.io/log"
 	storetypes "cosmossdk.io/store/types"
 	circuitkeeper "cosmossdk.io/x/circuit/keeper"
-	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
 	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
 
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	abci "github.com/cometbft/cometbft/abci/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
@@ -102,11 +99,6 @@ type App struct {
 	TransferKeeper      ibctransferkeeper.Keeper
 
 	FundchainKeeper fundchainmodulekeeper.Keeper
-	FeeGrantKeeper  feegrantkeeper.Keeper
-
-	// CosmWasm
-	WasmKeeper wasmkeeper.Keeper
-
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -186,7 +178,7 @@ func New(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
-		&app.FundchainKeeper, &app.FeeGrantKeeper,
+		&app.FundchainKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -225,9 +217,6 @@ func New(
 	})
 
 	if err := app.Load(loadLatest); err != nil {
-		panic(err)
-	}
-	if err := app.WasmKeeper.InitializePinnedCodes(app.NewUncachedContext(true, tmproto.Header{})); err != nil {
 		panic(err)
 	}
 
