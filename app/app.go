@@ -47,6 +47,7 @@ import (
 
 	"fundchain/docs"
 	fundchainmodulekeeper "fundchain/x/fundchain/keeper"
+	milestonesmodulekeeper "fundchain/x/milestones/keeper"
 )
 
 const (
@@ -98,7 +99,8 @@ type App struct {
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 
-	FundchainKeeper fundchainmodulekeeper.Keeper
+	FundchainKeeper  fundchainmodulekeeper.Keeper
+	MilestonesKeeper milestonesmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -179,6 +181,7 @@ func New(
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
 		&app.FundchainKeeper,
+		&app.MilestonesKeeper,
 	); err != nil {
 		panic(err)
 	}

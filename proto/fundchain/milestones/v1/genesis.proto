@@ -1,0 +1,17 @@
+syntax = "proto3";
+package fundchain.milestones.v1;
+
+import "amino/amino.proto";
+import "fundchain/milestones/v1/params.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "fundchain/x/milestones/types";
+
+// GenesisState defines the milestones module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+}
