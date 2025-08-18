@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"strconv"
 
 	"fundchain/x/milestones/types"
 
@@ -13,7 +14,21 @@ func (k msgServer) SubmitProject(ctx context.Context, msg *types.MsgSubmitProjec
 		return nil, errorsmod.Wrap(err, "invalid authority address")
 	}
 
-	// TODO: Handle the message
+	// parse budget (stored as uint64 in state, comes as string in msg)
+	budget, err := strconv.ParseUint(msg.Budget, 10, 64)
+	if err != nil {
+		return nil, errorsmod.Wrap(err, "invalid budget")
+	}
 
-	return &types.MsgSubmitProjectResponse{}, nil
+	id, err := k.AppendProject(ctx, types.Project{
+		Title:    msg.Title,
+		Budget:   budget,
+		IpfsHash: msg.IpfsHash,
+		Status:   "submitted",
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.MsgSubmitProjectResponse{ProjectId: id}, nil
 }

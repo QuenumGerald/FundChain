@@ -17,3 +17,11 @@ const (
 
 // ParamsKey is the prefix to retrieve all Params
 var ParamsKey = collections.NewPrefix("p_milestones")
+
+// Project and Milestone storage prefixes and sequences
+var (
+    ProjectKey      = collections.NewPrefix("p_project")
+    MilestoneKey    = collections.NewPrefix("p_milestone")
+    ProjectSeqKey   = collections.NewPrefix("s_project")
+    MilestoneSeqKey = collections.NewPrefix("s_milestone")
+)

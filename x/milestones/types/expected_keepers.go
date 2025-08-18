@@ -7,10 +7,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
-type GovKeeper interface {
-	// TODO Add methods imported from gov should be defined here
-}
-
 // AuthKeeper defines the expected interface for the Auth module.
 type AuthKeeper interface {
 	AddressCodec() address.Codec
@@ -21,6 +17,7 @@ type AuthKeeper interface {
 // BankKeeper defines the expected interface for the Bank module.
 type BankKeeper interface {
 	SpendableCoins(context.Context, sdk.AccAddress) sdk.Coins
+	SendCoins(context.Context, sdk.AccAddress, sdk.AccAddress, sdk.Coins) error
 	// Methods imported from bank should be defined here
 }
 

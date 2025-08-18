@@ -1,0 +1,24 @@
+syntax = "proto3";
+
+package fundchain.milestones.v1;
+
+option go_package = "fundchain/x/milestones/types";
+
+// Project represents a funding project tracked by the milestones module.
+message Project {
+  uint64 id        = 1;
+  string title     = 2;
+  uint64 budget    = 3;
+  string ipfs_hash = 4;
+  uint64 v_yes     = 5;
+  uint64 v_no      = 6;
+  uint64 tranche   = 7;
+  string status    = 8;
+}
+
+// Milestone represents a project milestone with attestations.
+message Milestone {
+  uint64 project_id     = 1;
+  string hash           = 2;
+  repeated string attesters = 3;
+}

@@ -62,7 +62,9 @@ message MsgSubmitProject {
 }
 
 // MsgSubmitProjectResponse defines the MsgSubmitProjectResponse message.
-message MsgSubmitProjectResponse {}
+message MsgSubmitProjectResponse {
+  uint64 project_id = 1;
+}
 
 // MsgVoteProject defines the MsgVoteProject message.
 message MsgVoteProject {

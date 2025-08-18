@@ -3,7 +3,9 @@ package fundchain.milestones.v1;
 
 import "amino/amino.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "fundchain/milestones/v1/params.proto";
+import "fundchain/milestones/v1/milestones.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -14,6 +16,26 @@ service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/fundchain/milestones/v1/params";
+  }
+
+  // List all projects
+  rpc Projects(QueryProjectsRequest) returns (QueryProjectsResponse) {
+    option (google.api.http).get = "/fundchain/milestones/v1/projects";
+  }
+
+  // Get a single project by id
+  rpc Project(QueryProjectRequest) returns (QueryProjectResponse) {
+    option (google.api.http).get = "/fundchain/milestones/v1/projects/{project_id}";
+  }
+
+  // List milestones for a project
+  rpc Milestones(QueryMilestonesRequest) returns (QueryMilestonesResponse) {
+    option (google.api.http).get = "/fundchain/milestones/v1/projects/{project_id}/milestones";
+  }
+
+  // Treasury spendable balance for milestones module account
+  rpc TreasuryBalance(QueryTreasuryBalanceRequest) returns (QueryTreasuryBalanceResponse) {
+    option (google.api.http).get = "/fundchain/milestones/v1/treasury/balance";
   }
 }
 
@@ -26,5 +48,34 @@ message QueryParamsResponse {
   Params params = 1 [
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
+  ];
+}
+
+// QueryProjectsRequest lists all projects
+message QueryProjectsRequest {}
+
+message QueryProjectsResponse {
+  repeated Project projects = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryProjectRequest returns a single project by id
+message QueryProjectRequest { uint64 project_id = 1; }
+
+message QueryProjectResponse { Project project = 1 [(gogoproto.nullable) = false]; }
+
+// QueryMilestonesRequest lists milestones for a project
+message QueryMilestonesRequest { uint64 project_id = 1; }
+
+message QueryMilestonesResponse {
+  repeated Milestone milestones = 1 [(gogoproto.nullable) = false];
+}
+
+// QueryTreasuryBalanceRequest returns the spendable balance of the milestones module account
+message QueryTreasuryBalanceRequest {}
+
+message QueryTreasuryBalanceResponse {
+  repeated cosmos.base.v1beta1.Coin balance = 1 [
+    (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.Coins",
+    (gogoproto.nullable) = false
   ];
 }
