@@ -180,6 +180,10 @@ func New(
 		&app.ConsensusParamsKeeper,
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
+		&app.IBCKeeper,
+		&app.ICAControllerKeeper,
+		&app.ICAHostKeeper,
+		&app.TransferKeeper,
 		&app.FundchainKeeper,
 		&app.MilestonesKeeper,
 	); err != nil {
