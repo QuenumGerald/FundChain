@@ -3,7 +3,9 @@ package fundchain.milestones.v1;
 
 import "amino/amino.proto";
 import "cosmos/base/query/v1beta1/pagination.proto";
+import "cosmos/base/v1beta1/coin.proto";
 import "fundchain/milestones/v1/params.proto";
+import "fundchain/milestones/milestones.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 
@@ -14,6 +16,26 @@ service Query {
   // Parameters queries the parameters of the module.
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/fundchain/milestones/v1/params";
+  }
+
+  // Projects lists projects with pagination
+  rpc Projects(QueryProjectsRequest) returns (QueryProjectsResponse) {
+    option (google.api.http).get = "/fundchain/milestones/v1/projects";
+  }
+
+  // Project gets a project by id
+  rpc Project(QueryProjectRequest) returns (QueryProjectResponse) {
+    option (google.api.http).get = "/fundchain/milestones/v1/projects/{id}";
+  }
+
+  // ProjectMilestones lists milestones for a given project id with pagination
+  rpc ProjectMilestones(QueryProjectMilestonesRequest) returns (QueryProjectMilestonesResponse) {
+    option (google.api.http).get = "/fundchain/milestones/v1/projects/{project_id}/milestones";
+  }
+
+  // TreasuryBalance returns the module treasury balance for the configured denom
+  rpc TreasuryBalance(QueryTreasuryBalanceRequest) returns (QueryTreasuryBalanceResponse) {
+    option (google.api.http).get = "/fundchain/milestones/v1/treasury/balance";
   }
 }
 
@@ -27,4 +49,42 @@ message QueryParamsResponse {
     (gogoproto.nullable) = false,
     (amino.dont_omitempty) = true
   ];
+}
+
+message QueryProjectsRequest {
+  cosmos.base.query.v1beta1.PageRequest pagination = 1;
+}
+
+message QueryProjectsResponse {
+  repeated fundchain.milestones.Project projects = 1 [
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryProjectRequest { uint64 id = 1; }
+
+message QueryProjectResponse {
+  fundchain.milestones.Project project = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryProjectMilestonesRequest {
+  uint64 project_id = 1;
+  cosmos.base.query.v1beta1.PageRequest pagination = 2;
+}
+
+message QueryProjectMilestonesResponse {
+  repeated fundchain.milestones.Milestone milestones = 1 [
+    (gogoproto.nullable) = false
+  ];
+  cosmos.base.query.v1beta1.PageResponse pagination = 2;
+}
+
+message QueryTreasuryBalanceRequest {}
+
+message QueryTreasuryBalanceResponse {
+  // configured treasury address (bech32) for transparency
+  string treasury = 1;
+  // balance for the module denom
+  cosmos.base.v1beta1.Coin balance = 2 [(gogoproto.nullable) = false];
 }
