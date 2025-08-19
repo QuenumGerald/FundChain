@@ -1,6 +1,7 @@
 package keeper
 
 import (
+	"context"
 	"fmt"
 
 	"cosmossdk.io/collections"
@@ -70,4 +71,14 @@ func NewKeeper(
 // GetAuthority returns the module's authority.
 func (k Keeper) GetAuthority() []byte {
 	return k.authority
+}
+
+// GetParams returns the current module parameters
+func (k Keeper) GetParams(ctx context.Context) (types.Params, error) {
+	return k.Params.Get(ctx)
+}
+
+// SetParams sets the module parameters
+func (k Keeper) SetParams(ctx context.Context, p types.Params) error {
+	return k.Params.Set(ctx, p)
 }

@@ -10,4 +10,9 @@ option go_package = "fundchain/x/milestones/types";
 message Params {
   option (amino.name) = "fundchain/x/milestones/Params";
   option (gogoproto.equal) = true;
+
+  // Treasury bech32 address allowed to receive funds. Empty means disabled.
+  string treasury = 1;
+  // Denom used by the module (e.g. "ufund").
+  string denom = 2;
 }
