@@ -13,6 +13,10 @@ message Project {
   uint64 tranche = 7;
   string status = 8;
   string owner = 9;
+  // Addresses allowed to attest milestones for this project
+  repeated string reviewers = 10;
+  // Number of distinct attestations required to meet validation
+  uint32 attestThreshold = 11;
 }
 
 message Milestone {

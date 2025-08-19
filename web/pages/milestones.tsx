@@ -3,6 +3,7 @@ import { Box, Text } from '@interchain-ui/react';
 import { Button } from '@/components/common/Button';
 import { useQuery } from '@tanstack/react-query';
 import { useChain } from '@cosmos-kit/react';
+import { useTx } from '@/hooks/common/useTx';
 
 import { useChainStore } from '@/contexts/chain';
 import { useConnectChain } from '@/hooks/common/useConnectChain';
@@ -12,6 +13,7 @@ export default function MilestonesPage() {
   const { selectedChain } = useChainStore();
   const { connect, isWalletConnected, address } = useConnectChain(selectedChain);
   const { getRestEndpoint } = useChain(selectedChain);
+  const { tx } = useTx(selectedChain);
 
   const restFactoryQuery = useQuery({
     queryKey: ['fundchainRest', selectedChain],
@@ -71,10 +73,15 @@ export default function MilestonesPage() {
       </Box>
 
       {/* Submit Project (UI only) */}
-      <SubmitProjectForm />
+      <SubmitProjectForm onSubmitTx={tx} chainName={selectedChain} address={address || ''} />
 
       {/* Attest Milestone (UI only) */}
-      <AttestMilestoneForm defaultProjectId={selectedProjectId} />
+      <AttestMilestoneForm
+        defaultProjectId={selectedProjectId}
+        currentProject={projectsQuery.data?.projects?.find((p: Project) => p.id === selectedProjectId)}
+        currentAddress={address || ''}
+        onSubmitTx={tx}
+      />
 
       <Box p="$6" borderRadius="$lg" border="1px solid #e5e7eb" backgroundColor="$cardBg">
         <Box as="h3" fontSize="$lg" fontWeight="$semibold">Params</Box>
@@ -140,9 +147,29 @@ export default function MilestonesPage() {
                 <Text color="$dangerText">{String(milestonesQuery.error)}</Text>
               )}
               {milestonesQuery.data && (
-                <pre style={{ overflowX: 'auto' }}>
-                  {JSON.stringify(milestonesQuery.data.milestones, null, 2)}
-                </pre>
+                <Box>
+                  <Box mb="$3">
+                    <Text color="$secondaryText">Reviewers</Text>
+                    <Box>
+                      {(() => {
+                        const proj = (projectsQuery.data?.projects || []).find(
+                          (p: Project) => p.id === selectedProjectId
+                        );
+                        const reviewers = proj?.reviewers || [];
+                        const threshold = proj?.attest_threshold || 0;
+                        return (
+                          <Box>
+                            <Text>Allowlist: {reviewers.length ? reviewers.join(', ') : '—'}</Text>
+                            <Text>Threshold: {threshold || '—'}</Text>
+                          </Box>
+                        );
+                      })()}
+                    </Box>
+                  </Box>
+                  <pre style={{ overflowX: 'auto' }}>
+                    {JSON.stringify(milestonesQuery.data.milestones, null, 2)}
+                  </pre>
+                </Box>
               )}
             </Box>
           </Box>
@@ -152,18 +179,47 @@ export default function MilestonesPage() {
   );
 }
 
-function SubmitProjectForm() {
+function SubmitProjectForm({
+  onSubmitTx,
+  chainName,
+  address,
+}: {
+  onSubmitTx: ReturnType<typeof useTx>['tx'];
+  chainName: string;
+  address: string;
+}) {
   const [title, setTitle] = useState('');
   const [budget, setBudget] = useState('');
   const [ipfs, setIpfs] = useState('');
+  const [reviewers, setReviewers] = useState(''); // comma-separated addresses
+  const [threshold, setThreshold] = useState('');
 
-  const disabled = !title || !budget || !ipfs;
+  const disabled = !title || !budget || !ipfs || Number.isNaN(Number(threshold)) || Number(threshold) < 1;
 
-  const onSubmit = () => {
+  const onSubmit = async () => {
     if (disabled) return;
-    // Placeholder: wire to useTx with MsgSubmitProject later
-    console.log('SubmitProject payload', { title, budget, ipfs_hash: ipfs });
-    alert('SubmitProject UI only. TX wiring pending.');
+    const reviewersList = reviewers.split(',').map((s) => s.trim()).filter(Boolean);
+    const msg = {
+      typeUrl: '/fundchain.milestones.v1.MsgSubmitProject',
+      value: {
+        creator: address,
+        title,
+        budget,
+        ipfs_hash: ipfs,
+        reviewers: reviewersList,
+        attest_threshold: Number(threshold),
+      },
+    };
+    await onSubmitTx([msg], {
+      toast: { title: 'Submitting project...' },
+      onSuccess: () => {
+        setTitle('');
+        setBudget('');
+        setIpfs('');
+        setReviewers('');
+        setThreshold('');
+      },
+    });
   };
 
   return (
@@ -188,13 +244,35 @@ function SubmitProjectForm() {
           onChange={(e) => setIpfs(e.target.value)}
           style={{ padding: '8px', borderRadius: 8, border: '1px solid #ddd', minWidth: 260 }}
         />
+        <input
+          placeholder="Reviewers (comma-separated addresses)"
+          value={reviewers}
+          onChange={(e) => setReviewers(e.target.value)}
+          style={{ padding: '8px', borderRadius: 8, border: '1px solid #ddd', minWidth: 360 }}
+        />
+        <input
+          placeholder="Threshold (e.g. 2)"
+          value={threshold}
+          onChange={(e) => setThreshold(e.target.value)}
+          style={{ padding: '8px', borderRadius: 8, border: '1px solid #ddd', minWidth: 160 }}
+        />
         <Button onClick={onSubmit} disabled={disabled} variant="primary">Submit</Button>
       </Box>
     </Box>
   );
 }
 
-function AttestMilestoneForm({ defaultProjectId }: { defaultProjectId?: string }) {
+function AttestMilestoneForm({
+  defaultProjectId,
+  currentProject,
+  currentAddress,
+  onSubmitTx,
+}: {
+  defaultProjectId?: string;
+  currentProject?: Project;
+  currentAddress: string;
+  onSubmitTx: ReturnType<typeof useTx>['tx'];
+}) {
   const [projectId, setProjectId] = useState(defaultProjectId || '');
   const [milestoneHash, setMilestoneHash] = useState('');
 
@@ -203,13 +281,26 @@ function AttestMilestoneForm({ defaultProjectId }: { defaultProjectId?: string }
     if (defaultProjectId && !projectId) setProjectId(defaultProjectId);
   }, [defaultProjectId]);
 
-  const disabled = !projectId || !milestoneHash;
+  const isReviewer = !!(
+    currentAddress && (currentProject?.reviewers || []).includes(currentAddress)
+  );
 
-  const onSubmit = () => {
+  const disabled = !projectId || !milestoneHash || !isReviewer;
+
+  const onSubmit = async () => {
     if (disabled) return;
-    // Placeholder: wire to useTx with MsgAttestMilestone later
-    console.log('AttestMilestone payload', { project_id: projectId, milestone_hash: milestoneHash });
-    alert('AttestMilestone UI only. TX wiring pending.');
+    const msg = {
+      typeUrl: '/fundchain.milestones.v1.MsgAttestMilestone',
+      value: {
+        creator: currentAddress,
+        project_id: projectId,
+        milestone_hash: milestoneHash,
+      },
+    };
+    await onSubmitTx([msg], {
+      toast: { title: 'Submitting attestation...' },
+      onSuccess: () => setMilestoneHash(''),
+    });
   };
 
   return (
@@ -229,6 +320,9 @@ function AttestMilestoneForm({ defaultProjectId }: { defaultProjectId?: string }
           style={{ padding: '8px', borderRadius: 8, border: '1px solid #ddd', minWidth: 260 }}
         />
         <Button onClick={onSubmit} disabled={disabled} variant="primary">Attest</Button>
+        {!isReviewer && (
+          <Text color="$secondaryText">Only allowlisted reviewers can attest this project's milestones.</Text>
+        )}
       </Box>
     </Box>
   );

@@ -1,6 +1,6 @@
 import { assets } from 'chain-registry';
 import { Asset, AssetList } from '@chain-registry/types';
-import { GasPrice } from '@cosmjs/stargate';
+import { AminoTypes, GasPrice } from '@cosmjs/stargate';
 import { SignerOptions, Wallet } from '@cosmos-kit/core';
 import { useChain } from '@cosmos-kit/react';
 
@@ -42,8 +42,45 @@ export const getSignerOptions = (): SignerOptions => {
   return {
     // @ts-ignore
     signingStargate: (chain) => {
+      const fundchainAminoConverters: any = {
+        '/fundchain.milestones.v1.MsgSubmitProject': {
+          aminoType: 'fundchain/MsgSubmitProject',
+          toAmino: (msg: any) => ({
+            creator: msg.creator,
+            title: msg.title,
+            budget: msg.budget,
+            ipfs_hash: msg.ipfs_hash,
+            reviewers: msg.reviewers || [],
+            attest_threshold: msg.attest_threshold,
+          }),
+          fromAmino: (amino: any) => ({
+            creator: amino.creator,
+            title: amino.title,
+            budget: amino.budget,
+            ipfs_hash: amino.ipfs_hash,
+            reviewers: amino.reviewers || [],
+            attest_threshold: Number(amino.attest_threshold || 0),
+          }),
+        },
+        '/fundchain.milestones.v1.MsgAttestMilestone': {
+          aminoType: 'fundchain/MsgAttestMilestone',
+          toAmino: (msg: any) => ({
+            creator: msg.creator,
+            project_id: msg.project_id,
+            milestone_hash: msg.milestone_hash,
+          }),
+          fromAmino: (amino: any) => ({
+            creator: amino.creator,
+            project_id: amino.project_id,
+            milestone_hash: amino.milestone_hash,
+          }),
+        },
+      };
       if (typeof chain === 'string') {
-        return { gasPrice: defaultGasPrice };
+        return {
+          gasPrice: defaultGasPrice,
+          aminoTypes: new AminoTypes(fundchainAminoConverters as any),
+        };
       }
       let gasPrice;
       try {
@@ -53,8 +90,11 @@ export const getSignerOptions = (): SignerOptions => {
       } catch (error) {
         gasPrice = defaultGasPrice;
       }
-      return { gasPrice };
+      return {
+        gasPrice,
+        aminoTypes: new AminoTypes(fundchainAminoConverters as any),
+      };
     },
-    preferredSignType: () => 'direct',
+    preferredSignType: () => 'amino',
   };
 };

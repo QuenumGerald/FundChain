@@ -22,6 +22,8 @@ export type Project = {
   owner: string;
   total_requested: { denom: string; amount: string };
   status: string;
+  reviewers?: string[];
+  attest_threshold?: number;
 };
 
 export type ProjectsResponse = {

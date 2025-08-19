@@ -26,12 +26,30 @@ func NewSubmitProjectCmd() *cobra.Command {
 			budget := args[1]
 			hash := args[2]
 
-			msg := types.NewMsgSubmitProject(from, title, budget, hash)
+			reviewers, err := cmd.Flags().GetStringSlice("reviewer")
+			if err != nil {
+				return err
+			}
+			threshold, err := cmd.Flags().GetUint32("threshold")
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgSubmitProject{
+				Creator:         from,
+				Title:           title,
+				Budget:          budget,
+				IpfsHash:        hash,
+				Reviewers:       reviewers,
+				AttestThreshold: threshold,
+			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
 
 	flags.AddTxFlagsToCmd(cmd)
+	cmd.Flags().StringSlice("reviewer", nil, "address allowed to attest; repeat for multiple (required)")
+	cmd.Flags().Uint32("threshold", 1, "number of attestations required to validate milestones")
 	return cmd
 }

@@ -6,6 +6,7 @@ import (
 
     "fundchain/x/milestones/types"
 
+    "cosmossdk.io/collections"
     errorsmod "cosmossdk.io/errors"
     sdk "github.com/cosmos/cosmos-sdk/types"
 )
@@ -26,19 +27,68 @@ func (k msgServer) AttestMilestone(ctx context.Context, msg *types.MsgAttestMile
         return nil, errorsmod.Wrap(types.ErrInvalidParam, "invalid project_id")
     }
 
-    if _, found, err := k.GetProject(ctx, id); err != nil {
+    p, found, err := k.GetProject(ctx, id)
+    if err != nil {
         return nil, err
     } else if !found {
         return nil, errorsmod.Wrapf(types.ErrNotFound, "project %d not found", id)
     }
 
-    m := types.Milestone{
-        ProjectId: id,
-        Hash:      msg.MilestoneHash,
-        Attesters: []string{msg.Creator},
+    // enforce reviewers allowlist
+    isReviewer := false
+    for _, r := range p.Reviewers {
+        if r == msg.Creator {
+            isReviewer = true
+            break
+        }
     }
-    if _, err := k.AppendMilestone(ctx, id, m); err != nil {
+    if !isReviewer {
+        return nil, errorsmod.Wrap(types.ErrUnauthorized, "attester not in project reviewers")
+    }
+
+    // find existing milestone by hash; update attesters uniquely or create new
+    ms, err := k.ListMilestones(ctx, id)
+    if err != nil {
         return nil, err
+    }
+    updated := false
+    for idx, m := range ms {
+        if m.Hash == msg.MilestoneHash {
+            // check duplicate attestation by same creator
+            for _, a := range m.Attesters {
+                if a == msg.Creator {
+                    return nil, errorsmod.Wrap(types.ErrInvalidParam, "duplicate attestation for this milestone by the same address")
+                }
+            }
+            m.Attesters = append(m.Attesters, msg.Creator)
+            // persist back at same index
+            // We need the index key; ListMilestones loses index, so walk to find key
+            // Re-walk and update by matching hash again
+            // Simpler: perform a walk and update in place
+            // Since collections API lacks direct update by value without key, do a second walk
+            err := k.Milestones.Walk(ctx, collections.NewPrefixedPairRange[uint64, uint64](id), func(key collections.Pair[uint64, uint64], val types.Milestone) (bool, error) {
+                if val.Hash == msg.MilestoneHash {
+                    return true, k.Milestones.Set(ctx, key, m)
+                }
+                return false, nil
+            })
+            if err != nil {
+                return nil, err
+            }
+            updated = true
+            _ = idx // idx unused after refactor
+            break
+        }
+    }
+    if !updated {
+        m := types.Milestone{
+            ProjectId: id,
+            Hash:      msg.MilestoneHash,
+            Attesters: []string{msg.Creator},
+        }
+        if _, err := k.AppendMilestone(ctx, id, m); err != nil {
+            return nil, err
+        }
     }
 
     // emit event

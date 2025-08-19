@@ -59,6 +59,10 @@ message MsgSubmitProject {
   string title = 2;
   string budget = 3;
   string ipfs_hash = 4;
+  // addresses allowed to attest milestones for this project
+  repeated string reviewers = 5;
+  // number of distinct attestations required to validate milestones
+  uint32 attest_threshold = 6;
 }
 
 // MsgSubmitProjectResponse defines the MsgSubmitProjectResponse message.

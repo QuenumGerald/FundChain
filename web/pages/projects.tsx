@@ -106,6 +106,10 @@ function ProjectCard({
           <Text color="$secondaryText">
             Budget: {project.total_requested?.amount} {project.total_requested?.denom}
           </Text>
+          <Text color="$secondaryText">
+            Reviewers: {project.reviewers?.length ? project.reviewers.join(', ') : '—'}
+          </Text>
+          <Text color="$secondaryText">Threshold: {project.attest_threshold ?? '—'}</Text>
         </Box>
         <button
           onClick={onToggle}

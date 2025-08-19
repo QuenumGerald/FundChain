@@ -62,6 +62,27 @@ func (k msgServer) ReleaseTranche(ctx context.Context, msg *types.MsgReleaseTran
 		return nil, errorsmod.Wrap(types.ErrInvalidParam, "invalid project owner address")
 	}
 
+	// require threshold: at least one milestone with enough unique attestations
+	ms, err := k.ListMilestones(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	meets := false
+	for _, m := range ms {
+		// dedupe in case of any future storage issues (should already be unique)
+		seen := make(map[string]struct{})
+		for _, a := range m.Attesters {
+			seen[a] = struct{}{}
+		}
+		if uint32(len(seen)) >= p.AttestThreshold {
+			meets = true
+			break
+		}
+	}
+	if !meets {
+		return nil, errorsmod.Wrap(types.ErrUnauthorized, "milestone threshold not met")
+	}
+
 	// compute tranche amount: 1/3 of budget; last tranche gets remainder
 	base := p.Budget / 3
 	remainder := p.Budget - base*3

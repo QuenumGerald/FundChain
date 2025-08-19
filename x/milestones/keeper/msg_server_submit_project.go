@@ -34,6 +34,22 @@ func (k msgServer) SubmitProject(ctx context.Context, msg *types.MsgSubmitProjec
 		return nil, errorsmod.Wrap(types.ErrInvalidParam, "ipfs hash cannot be empty")
 	}
 
+	// reviewers & threshold validation
+	if msg.AttestThreshold == 0 {
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "attest_threshold must be >= 1")
+	}
+	if len(msg.Reviewers) == 0 {
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "reviewers cannot be empty")
+	}
+	if int(msg.AttestThreshold) > len(msg.Reviewers) {
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "attest_threshold cannot exceed reviewers length")
+	}
+	for _, r := range msg.Reviewers {
+		if _, err := k.addressCodec.StringToBytes(r); err != nil {
+			return nil, errorsmod.Wrapf(types.ErrInvalidParam, "invalid reviewer address: %s", r)
+		}
+	}
+
 	// create project
 	p := types.Project{
 		Title:    msg.Title,
@@ -44,6 +60,8 @@ func (k msgServer) SubmitProject(ctx context.Context, msg *types.MsgSubmitProjec
 		Tranche:  0,
 		Status:   "submitted",
 		Owner:    msg.Creator,
+		Reviewers: msg.Reviewers,
+		AttestThreshold: msg.AttestThreshold,
 	}
 
 	id, err := k.AppendProject(ctx, p)
