@@ -28,6 +28,30 @@ func (am AppModule) AutoCLIOptions() *autocliv1.ModuleOptions {
 					RpcMethod: "UpdateParams",
 					Skip:      true, // skipped because authority gated
 				},
+				{
+					RpcMethod:      "SubmitProject",
+					Use:            "submit-project [title] [budget] [ipfs-hash]",
+					Short:          "Send a submit-project tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "title"}, {ProtoField: "budget"}, {ProtoField: "ipfs_hash"}},
+				},
+				{
+					RpcMethod:      "VoteProject",
+					Use:            "vote-project [project-id] [support]",
+					Short:          "Send a vote-project tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "project_id"}, {ProtoField: "support"}},
+				},
+				{
+					RpcMethod:      "AttestMilestone",
+					Use:            "attest-milestone [project-id] [milestone-hash]",
+					Short:          "Send a attest-milestone tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "project_id"}, {ProtoField: "milestone_hash"}},
+				},
+				{
+					RpcMethod:      "ReleaseTranche",
+					Use:            "release-tranche [project-id]",
+					Short:          "Send a release-tranche tx",
+					PositionalArgs: []*autocliv1.PositionalArgDescriptor{{ProtoField: "project_id"}},
+				},
 				// this line is used by ignite scaffolding # autocli/tx
 			},
 		},

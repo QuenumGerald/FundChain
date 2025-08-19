@@ -4,8 +4,9 @@ import (
 	"context"
 	"errors"
 
-	"cosmossdk.io/collections"
 	"fundchain/x/fundchain/types"
+
+	"cosmossdk.io/collections"
 )
 
 // InitGenesis initializes the module's state from a provided genesis state.
