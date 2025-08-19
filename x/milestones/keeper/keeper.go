@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"cosmossdk.io/collections"
+	collcodec "cosmossdk.io/collections/codec"
 	"cosmossdk.io/core/address"
 	corestore "cosmossdk.io/core/store"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -23,6 +24,11 @@ type Keeper struct {
 	Params collections.Item[types.Params]
 
 	bankKeeper types.BankKeeper
+
+	// collections
+	Projects    collections.Map[uint64, types.Project]
+	Milestones  collections.Map[collections.Pair[uint64, uint64], types.Milestone]
+	ProjectSeq  collections.Sequence
 }
 
 func NewKeeper(
@@ -47,6 +53,9 @@ func NewKeeper(
 
 		bankKeeper: bankKeeper,
 		Params:     collections.NewItem(sb, types.ParamsKey, "params", codec.CollValue[types.Params](cdc)),
+		Projects:   collections.NewMap(sb, types.ProjectKey, "projects", collcodec.NewUint64Key[uint64](), codec.CollValue[types.Project](cdc)),
+		Milestones: collections.NewMap(sb, types.MilestoneKey, "milestones", collections.PairKeyCodec(collcodec.NewUint64Key[uint64](), collcodec.NewUint64Key[uint64]()), codec.CollValue[types.Milestone](cdc)),
+		ProjectSeq: collections.NewSequence(sb, types.ProjectSeqKey, "project_seq"),
 	}
 
 	schema, err := sb.Build()

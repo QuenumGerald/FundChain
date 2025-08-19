@@ -40,8 +40,7 @@ func initFixture(t *testing.T) *fixture {
 		storeService,
 		encCfg.Codec,
 		addressCodec,
-		authority,
-		nil,
+		[]byte(authority),
 		nil,
 	)
 
