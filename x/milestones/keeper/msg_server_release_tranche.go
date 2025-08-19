@@ -2,7 +2,6 @@ package keeper
 
 import (
 	"context"
-	"fmt"
 	"strconv"
 
 	"fundchain/x/milestones/types"
@@ -18,11 +17,11 @@ func (k msgServer) ReleaseTranche(ctx context.Context, msg *types.MsgReleaseTran
 	}
 
 	if msg.ProjectId == "" {
-		return nil, fmt.Errorf("project_id cannot be empty")
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "project_id cannot be empty")
 	}
 	id, err := strconv.ParseUint(msg.ProjectId, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("invalid project_id: %w", err)
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "invalid project_id")
 	}
 
 	// load project
@@ -31,15 +30,15 @@ func (k msgServer) ReleaseTranche(ctx context.Context, msg *types.MsgReleaseTran
 		return nil, err
 	}
 	if !found {
-		return nil, fmt.Errorf("project %d not found", id)
+		return nil, errorsmod.Wrapf(types.ErrNotFound, "project %d not found", id)
 	}
 
 	// only allow release when accepted and tranche < 3
 	if p.Status != "accepted" && p.Status != "completed" {
-		return nil, fmt.Errorf("project status must be accepted or completed to release tranche; got %s", p.Status)
+		return nil, errorsmod.Wrap(types.ErrUnauthorized, "project status must be accepted or completed to release tranche")
 	}
 	if p.Tranche >= 3 {
-		return nil, fmt.Errorf("all tranches already released")
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "all tranches already released")
 	}
 
 	// params
@@ -48,19 +47,19 @@ func (k msgServer) ReleaseTranche(ctx context.Context, msg *types.MsgReleaseTran
 		return nil, err
 	}
 	if params.Treasury == "" {
-		return nil, fmt.Errorf("treasury param is not set")
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "treasury param is not set")
 	}
 	if params.Denom == "" {
-		return nil, fmt.Errorf("denom param is not set")
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "denom param is not set")
 	}
 
 	treasuryAddr, err := sdk.AccAddressFromBech32(params.Treasury)
 	if err != nil {
-		return nil, fmt.Errorf("invalid treasury address: %w", err)
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "invalid treasury address")
 	}
 	ownerAddr, err := sdk.AccAddressFromBech32(p.Owner)
 	if err != nil {
-		return nil, fmt.Errorf("invalid project owner address: %w", err)
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "invalid project owner address")
 	}
 
 	// compute tranche amount: 1/3 of budget; last tranche gets remainder
@@ -71,13 +70,13 @@ func (k msgServer) ReleaseTranche(ctx context.Context, msg *types.MsgReleaseTran
 		amountU64 += remainder
 	}
 	if amountU64 == 0 {
-		return nil, fmt.Errorf("computed tranche amount is zero")
+		return nil, types.ErrZeroAmount
 	}
 	coin := sdk.NewCoin(params.Denom, sdkmath.NewIntFromUint64(amountU64))
 
 	// send coins from treasury to owner
 	if err := k.bankKeeper.SendCoins(ctx, treasuryAddr, ownerAddr, sdk.NewCoins(coin)); err != nil {
-		return nil, fmt.Errorf("send coins failed: %w", err)
+		return nil, errorsmod.Wrap(types.ErrUnauthorized, err.Error())
 	}
 
 	// update project tranche and possibly status
@@ -88,6 +87,18 @@ func (k msgServer) ReleaseTranche(ctx context.Context, msg *types.MsgReleaseTran
 	if err := k.SetProject(ctx, p); err != nil {
 		return nil, err
 	}
+
+	// emit event
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventReleaseTranche,
+			sdk.NewAttribute(types.AttrProjectID, strconv.FormatUint(p.Id, 10)),
+			sdk.NewAttribute(types.AttrAmount, coin.Amount.String()),
+			sdk.NewAttribute(types.AttrDenom, coin.Denom),
+			sdk.NewAttribute(types.AttrOwner, p.Owner),
+		),
+	)
 
 	return &types.MsgReleaseTrancheResponse{}, nil
 }

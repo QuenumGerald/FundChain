@@ -8,6 +8,7 @@ import (
 	"fundchain/x/milestones/types"
 
 	errorsmod "cosmossdk.io/errors"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 func (k msgServer) SubmitProject(ctx context.Context, msg *types.MsgSubmitProject) (*types.MsgSubmitProjectResponse, error) {
@@ -17,20 +18,20 @@ func (k msgServer) SubmitProject(ctx context.Context, msg *types.MsgSubmitProjec
 
 	// basic validation
 	if msg.Title == "" {
-		return nil, fmt.Errorf("title cannot be empty")
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "title cannot be empty")
 	}
 	if msg.Budget == "" {
-		return nil, fmt.Errorf("budget cannot be empty")
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "budget cannot be empty")
 	}
 	budget, err := strconv.ParseUint(msg.Budget, 10, 64)
 	if err != nil {
-		return nil, fmt.Errorf("invalid budget: %w", err)
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, fmt.Sprintf("invalid budget: %v", err))
 	}
 	if budget == 0 {
-		return nil, fmt.Errorf("budget must be > 0")
+		return nil, types.ErrZeroAmount
 	}
 	if msg.IpfsHash == "" {
-		return nil, fmt.Errorf("ipfs hash cannot be empty")
+		return nil, errorsmod.Wrap(types.ErrInvalidParam, "ipfs hash cannot be empty")
 	}
 
 	// create project
@@ -45,9 +46,21 @@ func (k msgServer) SubmitProject(ctx context.Context, msg *types.MsgSubmitProjec
 		Owner:    msg.Creator,
 	}
 
-	if _, err := k.AppendProject(ctx, p); err != nil {
+	id, err := k.AppendProject(ctx, p)
+	if err != nil {
 		return nil, err
 	}
 
-	return &types.MsgSubmitProjectResponse{}, nil
+	// emit event
+	sdkCtx := sdk.UnwrapSDKContext(ctx)
+	sdkCtx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventSubmitProject,
+			sdk.NewAttribute(types.AttrProjectID, strconv.FormatUint(id, 10)),
+			sdk.NewAttribute(types.AttrOwner, p.Owner),
+			sdk.NewAttribute(types.AttrHash, p.IpfsHash),
+		),
+	)
+
+	return &types.MsgSubmitProjectResponse{Id: id}, nil
 }
