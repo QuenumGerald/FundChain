@@ -1,0 +1,13 @@
+syntax = "proto3";
+package fundchain.milestones.v1;
+
+import "amino/amino.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "fundchain/x/milestones/types";
+
+// Params defines the parameters for the module.
+message Params {
+  option (amino.name) = "fundchain/x/milestones/Params";
+  option (gogoproto.equal) = true;
+}

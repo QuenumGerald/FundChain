@@ -47,6 +47,7 @@ import (
 
 	"fundchain/docs"
 	fundchainmodulekeeper "fundchain/x/fundchain/keeper"
+	milestonesmodulekeeper "fundchain/x/milestones/keeper"
 )
 
 const (
@@ -98,7 +99,8 @@ type App struct {
 	ICAHostKeeper       icahostkeeper.Keeper
 	TransferKeeper      ibctransferkeeper.Keeper
 
-	FundchainKeeper fundchainmodulekeeper.Keeper
+	FundchainKeeper  fundchainmodulekeeper.Keeper
+	MilestonesKeeper milestonesmodulekeeper.Keeper
 	// this line is used by starport scaffolding # stargate/app/keeperDeclaration
 
 	// simulation manager
@@ -179,6 +181,7 @@ func New(
 		&app.CircuitBreakerKeeper,
 		&app.ParamsKeeper,
 		&app.FundchainKeeper,
+		&app.MilestonesKeeper,
 	); err != nil {
 		panic(err)
 	}
@@ -190,10 +193,13 @@ func New(
 	// build app
 	app.App = appBuilder.Build(db, traceStore, baseAppOptions...)
 
-	// register legacy modules
+	// register non-depinject (legacy) modules such as IBC
 	if err := app.registerIBCModules(appOpts); err != nil {
 		panic(err)
 	}
+
+	// register legacy modules
+	// CosmWasm disabled: do not initialize pinned codes
 
 	/****  Module Options ****/
 

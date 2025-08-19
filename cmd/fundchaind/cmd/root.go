@@ -39,6 +39,9 @@ func NewRootCmd() *cobra.Command {
 		&moduleBasicManager,
 		&clientCtx,
 	); err != nil {
+		// Print the underlying depinject error to stderr to aid debugging
+		// before panicking so the full cause is visible in logs.
+		_, _ = os.Stderr.WriteString("depinject error: " + err.Error() + "\n")
 		panic(err)
 	}
 
