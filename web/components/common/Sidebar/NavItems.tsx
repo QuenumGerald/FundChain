@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Box, Icon, IconName, Stack, Text } from '@interchain-ui/react';
-import { RiHome7Line, RiStackLine, RiFlag2Line } from 'react-icons/ri';
+import { RiHome7Line, RiStackLine, RiFlag2Line, RiBarChart2Line } from 'react-icons/ri';
 import { MdOutlineWaterDrop, MdOutlineHowToVote } from 'react-icons/md';
 import { LuFileJson } from 'react-icons/lu';
 
@@ -38,6 +38,11 @@ const navItems: NavItem[] = [
     icon: <RiFlag2Line size="20px" />,
     label: 'Milestones',
     href: '/milestones',
+  },
+  {
+    icon: <RiBarChart2Line size="20px" />,
+    label: 'Projects',
+    href: '/projects',
   },
   {
     icon: 'document',

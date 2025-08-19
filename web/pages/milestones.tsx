@@ -70,6 +70,12 @@ export default function MilestonesPage() {
         </Box>
       </Box>
 
+      {/* Submit Project (UI only) */}
+      <SubmitProjectForm />
+
+      {/* Attest Milestone (UI only) */}
+      <AttestMilestoneForm defaultProjectId={selectedProjectId} />
+
       <Box p="$6" borderRadius="$lg" border="1px solid #e5e7eb" backgroundColor="$cardBg">
         <Box as="h3" fontSize="$lg" fontWeight="$semibold">Params</Box>
         {paramsQuery.isLoading && <Text>Loading...</Text>}
@@ -141,6 +147,88 @@ export default function MilestonesPage() {
             </Box>
           </Box>
         )}
+      </Box>
+    </Box>
+  );
+}
+
+function SubmitProjectForm() {
+  const [title, setTitle] = useState('');
+  const [budget, setBudget] = useState('');
+  const [ipfs, setIpfs] = useState('');
+
+  const disabled = !title || !budget || !ipfs;
+
+  const onSubmit = () => {
+    if (disabled) return;
+    // Placeholder: wire to useTx with MsgSubmitProject later
+    console.log('SubmitProject payload', { title, budget, ipfs_hash: ipfs });
+    alert('SubmitProject UI only. TX wiring pending.');
+  };
+
+  return (
+    <Box p="$6" borderRadius="$lg" border="1px solid #e5e7eb" backgroundColor="$cardBg">
+      <Box as="h3" fontSize="$lg" fontWeight="$semibold">Submit Project</Box>
+      <Box display="flex" gap="$4" mt="$3" flexWrap="wrap">
+        <input
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          style={{ padding: '8px', borderRadius: 8, border: '1px solid #ddd', minWidth: 220 }}
+        />
+        <input
+          placeholder="Budget (e.g. 1000000ufund)"
+          value={budget}
+          onChange={(e) => setBudget(e.target.value)}
+          style={{ padding: '8px', borderRadius: 8, border: '1px solid #ddd', minWidth: 220 }}
+        />
+        <input
+          placeholder="IPFS Hash"
+          value={ipfs}
+          onChange={(e) => setIpfs(e.target.value)}
+          style={{ padding: '8px', borderRadius: 8, border: '1px solid #ddd', minWidth: 260 }}
+        />
+        <Button onClick={onSubmit} disabled={disabled} variant="primary">Submit</Button>
+      </Box>
+    </Box>
+  );
+}
+
+function AttestMilestoneForm({ defaultProjectId }: { defaultProjectId?: string }) {
+  const [projectId, setProjectId] = useState(defaultProjectId || '');
+  const [milestoneHash, setMilestoneHash] = useState('');
+
+  // keep in sync if selection above changes
+  useEffect(() => {
+    if (defaultProjectId && !projectId) setProjectId(defaultProjectId);
+  }, [defaultProjectId]);
+
+  const disabled = !projectId || !milestoneHash;
+
+  const onSubmit = () => {
+    if (disabled) return;
+    // Placeholder: wire to useTx with MsgAttestMilestone later
+    console.log('AttestMilestone payload', { project_id: projectId, milestone_hash: milestoneHash });
+    alert('AttestMilestone UI only. TX wiring pending.');
+  };
+
+  return (
+    <Box p="$6" borderRadius="$lg" border="1px solid #e5e7eb" backgroundColor="$cardBg">
+      <Box as="h3" fontSize="$lg" fontWeight="$semibold">Attest Milestone</Box>
+      <Box display="flex" gap="$4" mt="$3" flexWrap="wrap">
+        <input
+          placeholder="Project ID"
+          value={projectId}
+          onChange={(e) => setProjectId(e.target.value)}
+          style={{ padding: '8px', borderRadius: 8, border: '1px solid #ddd', minWidth: 160 }}
+        />
+        <input
+          placeholder="Milestone Hash"
+          value={milestoneHash}
+          onChange={(e) => setMilestoneHash(e.target.value)}
+          style={{ padding: '8px', borderRadius: 8, border: '1px solid #ddd', minWidth: 260 }}
+        />
+        <Button onClick={onSubmit} disabled={disabled} variant="primary">Attest</Button>
       </Box>
     </Box>
   );
