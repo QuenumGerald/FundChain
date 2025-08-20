@@ -37,7 +37,7 @@ export const getWalletLogo = (wallet: Wallet) => {
 };
 
 export const getSignerOptions = (): SignerOptions => {
-  const defaultGasPrice = GasPrice.fromString('0.025stake');
+  const defaultGasPrice = GasPrice.fromString('0.025ufund');
 
   return {
     // @ts-ignore
@@ -85,7 +85,7 @@ export const getSignerOptions = (): SignerOptions => {
       let gasPrice;
       try {
         const feeToken = chain.fees?.fee_tokens[0];
-        const fee = `${feeToken?.average_gas_price || 0.025}${feeToken?.denom}`;
+        const fee = `${feeToken?.average_gas_price || 0.025}${feeToken?.denom || 'ufund'}`;
         gasPrice = GasPrice.fromString(fee);
       } catch (error) {
         gasPrice = defaultGasPrice;

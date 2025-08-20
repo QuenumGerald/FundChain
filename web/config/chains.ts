@@ -24,16 +24,16 @@ export const fundchainAssets: AssetList = {
   chain_name: 'fundchain',
   assets: [
     {
-      description: 'Staking token for FundChain devnet',
+      description: 'Native token for FundChain devnet',
       denom_units: [
-        { denom: 'stake', exponent: 0 },
-        { denom: 'STAKE', exponent: 6 },
+        { denom: 'ufund', exponent: 0 },
+        { denom: 'FUND', exponent: 6 },
       ],
       type_asset: 'sdk.coin',
-      base: 'stake',
-      name: 'Stake',
-      display: 'STAKE',
-      symbol: 'STAKE',
+      base: 'ufund',
+      name: 'Fund',
+      display: 'FUND',
+      symbol: 'FUND',
     },
   ],
 };
