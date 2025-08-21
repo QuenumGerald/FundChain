@@ -68,9 +68,15 @@ func (k Keeper) ExportGenesis(ctx context.Context) (*types.GenesisState, error) 
 	// params
 	params, err := k.Params.Get(ctx)
 	if err != nil {
-		return nil, err
-	}
-	gs.Params = params
+        // When exporting before InitGenesis has ever set Params, collection may be empty.
+        // Default to module defaults instead of failing the export.
+        if errors.Is(err, collections.ErrNotFound) {
+            params = types.DefaultParams()
+        } else {
+            return nil, err
+        }
+    }
+    gs.Params = params
 
 	// next project id from sequence
 	// Peek returns current value; Next would increment. We want next id, so peek+1
