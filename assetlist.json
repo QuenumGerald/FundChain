@@ -5,14 +5,18 @@
       "description": "The native token of the fundchain chain",
       "denom_units": [
         {
-          "denom": "stake",
+          "denom": "ufund",
           "exponent": 0
+        },
+        {
+          "denom": "FUND",
+          "exponent": 6
         }
       ],
-      "base": "stake",
-      "name": "fundchain",
-      "display": "",
-      "symbol": "STAKE",
+      "base": "ufund",
+      "name": "Fund",
+      "display": "FUND",
+      "symbol": "FUND",
       "logo_URIs": {
         "png": "https://ignite.com/favicon.ico",
         "svg": "https://ignite.com/favicon.ico"

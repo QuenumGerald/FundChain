@@ -3,22 +3,24 @@ import { ChainInfo, Currency } from '@keplr-wallet/types';
 import { fromBech32 } from '@cosmjs/encoding';
 
 export const makeKeplrChainInfo = (chain: Chain, asset: Asset): ChainInfo => {
+  // Resolve a robust decimals value
+  const displayUnit = asset?.denom_units?.find(({ denom }) => denom === asset?.display);
+  const fallbackUnit = asset?.denom_units?.[asset?.denom_units?.length - 1];
+  const decimals = Number.isFinite(displayUnit?.exponent)
+    ? (displayUnit!.exponent as number)
+    : (Number.isFinite(fallbackUnit?.exponent) ? (fallbackUnit!.exponent as number) : 6);
+
   const currency: Currency = {
-    coinDenom: asset.symbol,
-    coinMinimalDenom: asset.base,
-    coinDecimals:
-      asset.denom_units.find(({ denom }) => denom === asset.display)
-        ?.exponent ?? 6,
-    coinGeckoId: asset.coingecko_id,
-    coinImageUrl:
-      asset.logo_URIs?.svg ||
-      asset.logo_URIs?.png ||
-      '',
+    coinDenom: asset?.symbol || asset?.display || 'FUND',
+    coinMinimalDenom: asset?.base || 'ufund',
+    coinDecimals: decimals,
+    coinGeckoId: asset?.coingecko_id,
+    coinImageUrl: asset?.logo_URIs?.svg || asset?.logo_URIs?.png || '',
   };
 
   return {
-    rpc: chain.apis?.rpc?.[0].address ?? '',
-    rest: chain.apis?.rest?.[0].address ?? '',
+    rpc: chain.apis?.rpc?.[0].address ?? 'http://localhost:26657',
+    rest: chain.apis?.rest?.[0].address ?? 'http://localhost:1317',
     chainId: chain.chain_id,
     chainName: chain.chain_name,
     bip44: {
