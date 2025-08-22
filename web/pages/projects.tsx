@@ -92,7 +92,10 @@ function ProjectCard({
     const total = ms.length;
     if (total === 0) return 0;
     const completed = ms.filter((m) =>
-      typeof m.status === 'string' && m.status.toLowerCase().includes('attest') || m.status.toLowerCase().includes('complete')
+      typeof m.status === 'string' && (
+        m.status.toLowerCase().includes('attest') ||
+        m.status.toLowerCase().includes('complete')
+      )
     ).length;
     return Math.round((completed / total) * 100);
   }, [milestonesQuery.data]);

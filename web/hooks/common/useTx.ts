@@ -130,9 +130,11 @@ export const useTx = (chainName: string) => {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ command: cliCmd })
             });
-            
+
             if (response.ok) {
               const result = await response.json();
+              // eslint-disable-next-line no-console
+              console.log('[fundchain] CLI result:', result);
               toast({
                 title: 'Transaction Submitted',
                 description: 'Project submitted successfully',
@@ -140,10 +142,20 @@ export const useTx = (chainName: string) => {
               });
               if (options.onSuccess) options.onSuccess();
             } else {
-              throw new Error('CLI execution failed');
+              const err = await response.json().catch(() => ({}));
+              // eslint-disable-next-line no-console
+              console.error('[fundchain] CLI error:', err);
+              toast({
+                title: 'CLI execution failed',
+                description: (err && (err.stderr || err.stdout || err.error)) || 'Unknown error',
+                type: 'error',
+                duration: 12000,
+              });
             }
-          } catch (error) {
+          } catch (error: any) {
             // Fallback: show the command for manual execution
+            // eslint-disable-next-line no-console
+            console.error('[fundchain] CLI request error:', error);
             toast({
               title: 'Manual Execution Required',
               description: `Please run: ${cliCmd}`,
@@ -155,16 +167,48 @@ export const useTx = (chainName: string) => {
         
         if (msg.typeUrl === '/fundchain.milestones.v1.MsgAttestMilestone') {
           const cliCmd = `fundchaind tx milestones attest-milestone "${msgValue.project_id}" "${msgValue.milestone_hash}" --from alice --chain-id fundchain --keyring-backend test --yes --output json`;
-          
+
           // eslint-disable-next-line no-console
           console.log('[fundchain] executing CLI command:', cliCmd);
-          
-          toast({
-            title: 'Attestation Submitted',
-            description: 'Milestone attested successfully via CLI',
-            type: 'success',
-          });
-          if (options.onSuccess) options.onSuccess();
+
+          try {
+            const response = await fetch('/api/execute-cli', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ command: cliCmd })
+            });
+
+            if (response.ok) {
+              const result = await response.json();
+              // eslint-disable-next-line no-console
+              console.log('[fundchain] CLI result:', result);
+              toast({
+                title: 'Attestation Submitted',
+                description: 'Milestone attested successfully',
+                type: 'success',
+              });
+              if (options.onSuccess) options.onSuccess();
+            } else {
+              const err = await response.json().catch(() => ({}));
+              // eslint-disable-next-line no-console
+              console.error('[fundchain] CLI error:', err);
+              toast({
+                title: 'CLI execution failed',
+                description: (err && (err.stderr || err.stdout || err.error)) || 'Unknown error',
+                type: 'error',
+                duration: 12000,
+              });
+            }
+          } catch (error: any) {
+            // Fallback: show the command for manual execution
+            // eslint-disable-next-line no-console
+            console.error('[fundchain] CLI request error:', error);
+            toast({
+              title: 'Manual Execution Required',
+              description: `Please run: ${cliCmd}`,
+              type: 'error',
+            });
+          }
           return;
         }
       }
