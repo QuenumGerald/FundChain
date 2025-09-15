@@ -142,11 +142,11 @@ func (app *App) registerIBCModules(appOpts servertypes.AppOptions) error {
 // This needs to be removed after IBC supports App Wiring.
 func RegisterIBC(cdc codec.Codec) map[string]appmodule.AppModule {
 	modules := map[string]appmodule.AppModule{
-		ibcexported.ModuleName:      ibc.NewAppModule(&ibckeeper.Keeper{}),
-		ibctransfertypes.ModuleName: ibctransfer.NewAppModule(ibctransferkeeper.Keeper{}),
-		icatypes.ModuleName:         icamodule.NewAppModule(&icacontrollerkeeper.Keeper{}, &icahostkeeper.Keeper{}),
-		ibctm.ModuleName:            ibctm.NewAppModule(ibctm.NewLightClientModule(cdc, ibcclienttypes.StoreProvider{})),
-		solomachine.ModuleName:      solomachine.NewAppModule(solomachine.NewLightClientModule(cdc, ibcclienttypes.StoreProvider{})),
+		ibcexported.ModuleName:      ibc.AppModule{},
+		ibctransfertypes.ModuleName: ibctransfer.AppModule{},
+		icatypes.ModuleName:         icamodule.AppModule{},
+		ibctm.ModuleName:            ibctm.AppModule{},
+		solomachine.ModuleName:      solomachine.AppModule{},
 	}
 
 	for _, m := range modules {

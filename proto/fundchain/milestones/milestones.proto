@@ -1,0 +1,26 @@
+syntax = "proto3";
+package fundchain.milestones;
+
+option go_package = "fundchain/x/milestones/types";
+
+message Project {
+  uint64 id = 1;
+  string title = 2;
+  uint64 budget = 3;
+  string ipfsHash = 4;
+  uint64 vYes = 5;
+  uint64 vNo = 6;
+  uint64 tranche = 7;
+  string status = 8;
+  string owner = 9;
+  // Addresses allowed to attest milestones for this project
+  repeated string reviewers = 10;
+  // Number of distinct attestations required to meet validation
+  uint32 attestThreshold = 11;
+}
+
+message Milestone {
+  uint64 projectId = 1;
+  string hash = 2;
+  repeated string attesters = 3;
+}

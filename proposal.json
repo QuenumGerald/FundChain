@@ -1,0 +1,17 @@
+{
+  "messages": [
+    {
+      "@type": "/fundchain.milestones.v1.MsgUpdateParams",
+      "authority": "fund10d07y265gmmuvt4z0w9aw880jnsr700jkmveha",
+      "params": {
+        "treasury": "fund1kxcaeczhkfr4kzketqp6haw24xslheyhs2gdp8",
+        "denom": "ufund"
+      }
+    }
+  ],
+"deposit": "10000000ufund",
+  "title": "Set milestones params",
+  "summary": "Configure treasury address and denom for milestones",
+  "expedited": false,
+  "metadata": ""
+}

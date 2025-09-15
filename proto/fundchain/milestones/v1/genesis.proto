@@ -1,0 +1,36 @@
+syntax = "proto3";
+package fundchain.milestones.v1;
+
+import "amino/amino.proto";
+import "fundchain/milestones/v1/params.proto";
+import "fundchain/milestones/milestones.proto";
+import "gogoproto/gogo.proto";
+
+option go_package = "fundchain/x/milestones/types";
+
+// MilestoneEntry is used in genesis to restore milestones with their index.
+message MilestoneEntry {
+  uint64 project_id = 1;
+  uint64 index = 2;
+  fundchain.milestones.Milestone milestone = 3 [(gogoproto.nullable)=false];
+}
+
+// GenesisState defines the milestones module's genesis state.
+message GenesisState {
+  // params defines all the parameters of the module.
+  Params params = 1 [
+    (gogoproto.nullable) = false,
+    (amino.dont_omitempty) = true
+  ];
+
+  // next_project_id is the next id to be assigned when creating a project.
+  uint64 next_project_id = 2;
+
+  // projects is the list of all projects at genesis.
+  repeated fundchain.milestones.Project projects = 3 [
+    (gogoproto.nullable) = false
+  ];
+
+  // milestones is the list of all milestones at genesis.
+  repeated MilestoneEntry milestones = 4 [ (gogoproto.nullable) = false ];
+}

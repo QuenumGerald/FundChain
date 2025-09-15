@@ -1,0 +1,31 @@
+{
+  "chain_name": "fundchain",
+  "assets": [
+    {
+      "description": "The native token of the fundchain chain",
+      "denom_units": [
+        {
+          "denom": "ufund",
+          "exponent": 0
+        },
+        {
+          "denom": "FUND",
+          "exponent": 6
+        }
+      ],
+      "base": "ufund",
+      "name": "Fund",
+      "display": "FUND",
+      "symbol": "FUND",
+      "logo_URIs": {
+        "png": "https://ignite.com/favicon.ico",
+        "svg": "https://ignite.com/favicon.ico"
+      },
+      "socials": {
+        "website": "https://ignite.com",
+        "twitter": "https://x.com/ignite"
+      },
+      "type_asset": "sdk.coin"
+    }
+  ]
+}
