@@ -49,3 +49,87 @@ curl https://get.ignite.com/username/fundchain@latest! | sudo bash
 - [Ignite CLI docs](https://docs.ignite.com)
 - [Cosmos SDK docs](https://docs.cosmos.network)
 - [Developer Chat](https://discord.gg/ignite)
+
+## Demo scenario
+
+This internal walkthrough helps me present FundChain quickly. Run the commands
+from the project root in a terminal with [Ignite CLI](https://ignite.com/cli)
+and Go installed.
+
+### 1. Start the local chain
+
+```bash
+git clone https://github.com/username/FundChain.git
+cd FundChain
+ignite chain serve
+```
+
+The `serve` command builds, initializes, and starts a local node with two
+preconfigured accounts: `alice` and `bob`.
+
+### 2. Seed the community pool
+
+Open a new terminal in the same directory and store Alice's and Bob's addresses:
+
+```bash
+fundchaind keys list --keyring-backend test
+ALICE=$(fundchaind keys show alice -a --keyring-backend test)
+BOB=$(fundchaind keys show bob -a --keyring-backend test)
+```
+
+Send tokens from Alice to the community pool:
+
+```bash
+fundchaind tx distribution fund-community-pool 100token \
+  --from alice --fees 1stake --chain-id fundchain --keyring-backend test
+```
+
+Check the pool balance:
+
+```bash
+fundchaind q distribution community-pool
+```
+
+### 3. Bob proposes his project
+
+Bob requests funding from the community pool for his project:
+
+```bash
+fundchaind tx gov submit-proposal community-pool-spend $BOB 50token \
+  --title "Demo funding" \
+  --description "Send 50token from the community pool to Bob" \
+  --deposit 10000000stake \
+  --from bob --fees 1stake --chain-id fundchain --keyring-backend test
+```
+
+The first proposal gets ID `1`:
+
+```bash
+PROPOSAL=1
+fundchaind q gov proposal $PROPOSAL
+```
+
+### 4. Vote and finalize
+
+Approve the proposal:
+
+```bash
+fundchaind tx gov vote $PROPOSAL yes --from alice --fees 1stake --chain-id fundchain --keyring-backend test
+fundchaind tx gov vote $PROPOSAL yes --from bob --fees 1stake --chain-id fundchain --keyring-backend test
+```
+
+Wait for the voting period (about a minute) and confirm it passed:
+
+```bash
+fundchaind q gov proposal $PROPOSAL
+```
+
+Verify Bob received the funds:
+
+```bash
+fundchaind q bank balances $BOB
+```
+
+### 5. Stop the network
+
+Return to the terminal running `ignite chain serve` and stop with `Ctrl+C`.
